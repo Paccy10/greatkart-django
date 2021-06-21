@@ -1,0 +1,10 @@
+[MESSAGES CONTROL]
+disable = 
+    no-member,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    abstract-method,
+    invalid_name,
+    consider-iterating-dictionary,
+    invalid-str-returned
