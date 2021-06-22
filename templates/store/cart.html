@@ -6,11 +6,11 @@
     {% if not cart_items %}
     <div class="card">
       <div class="card-body text-center">
-        <h5 class="text-muted">
-          Your Shopping Cart is Empty
-        </h5>
-        <br>
-        <a href="{% url 'store' %}" class="btn btn-primary">Continue Shopping</a>
+        <h5 class="text-muted">Your Shopping Cart is Empty</h5>
+        <br />
+        <a href="{% url 'store' %}" class="btn btn-primary"
+          >Continue Shopping</a
+        >
       </div>
     </div>
     {% else %}
@@ -35,12 +35,18 @@
                       <img src="{{ item.product.images.url }}" class="img-sm" />
                     </div>
                     <figcaption class="info">
-                      <a href="{{ item.product.get_url }}" class="title text-dark"
+                      <a
+                        href="{{ item.product.get_url }}"
+                        class="title text-dark"
                         >{{ item.product.name }}</a
                       >
                       <p class="text-muted small">
-                        Color: 25 Mpx <br />
-                        Size: Canon
+                        {% for variation in item.variations.all %}
+                        <span>
+                          {{ variation.variation.name }}: {{ variation.value }}
+                        </span>
+                        <br />
+                        {% endfor %}
                       </p>
                     </figcaption>
                   </figure>
@@ -50,10 +56,10 @@
                     <div class="input-group input-spinner">
                       <div class="input-group-prepend">
                         <a
-                          href="{% url 'remove_cart' item.product.id %}"
+                          href="{% url 'remove_cart' item.product.id item.id %}"
                           class="btn btn-light"
                           type="button"
-                          id="button-plus"
+                          id="button-minus"
                         >
                           <i class="fa fa-minus"></i>
                         </a>
@@ -64,14 +70,21 @@
                         value="{{ item.quantity }}"
                       />
                       <div class="input-group-append">
-                        <a
-                          href="{% url 'add_cart' item.product.id %}"
+                        <form action="{% url 'add_cart' item.product.id %}" method="POST">
+                          {% csrf_token %}
+                          <div>
+                            {% for variation in item.variations.all %}
+                            <input type="hidden" name="{{ variation.variation.name }}" value="{{ variation.value }}">
+                            {% endfor %}
+                          </div>
+                          <button
                           class="btn btn-light"
-                          type="button"
-                          id="button-minus"
+                          type="submit"
+                          id="button-plus"
                         >
                           <i class="fa fa-plus"></i>
-                        </a>
+                        </button>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -85,7 +98,13 @@
                   </div>
                 </td>
                 <td class="text-right">
-                  <a href="{% url 'remove_cart_item' item.product.id %}" class="btn btn-danger"> Remove</a>
+                  <a
+                    href="{% url 'remove_cart_item' item.product.id item.id %}"
+                    class="btn btn-danger"
+                    onclick="return confirm('Are you sure you want to remove this item?')"
+                  >
+                    Remove</a
+                  >
                 </td>
               </tr>
               {% endfor %}
