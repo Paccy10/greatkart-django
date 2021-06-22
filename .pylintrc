@@ -7,4 +7,5 @@ disable =
     abstract-method,
     invalid_name,
     consider-iterating-dictionary,
-    invalid-str-returned
+    invalid-str-returned,
+    redefined-outer-name,
