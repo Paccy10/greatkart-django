@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 from os import getenv
 from dotenv import load_dotenv
+from django.contrib.messages import constants as messages
 
 load_dotenv()
 
@@ -135,3 +136,14 @@ STATICFILES_DIRS = ['greatkart/static']
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Messages
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}
+
+# SMTP config
+EMAIL_HOST = getenv('EMAIL_HOST')
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = getenv('EMAIL_PORT')
