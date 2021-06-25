@@ -10,12 +10,7 @@ class RegistrationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(RegistrationForm, self).__init__(*args, **kwargs)
-        self.fields['firstname'].widget.attrs['placeholder'] = 'Enter First Name'
-        self.fields['lastname'].widget.attrs['placeholder'] = 'Enter Last Name'
-        self.fields['phone_number'].widget.attrs['placeholder'] = 'Enter Phone Number'
-        self.fields['email'].widget.attrs['placeholder'] = 'Enter E-mail Address'
-        self.fields['password'].widget.attrs['placeholder'] = 'Enter Password'
-        self.fields['confirm_password'].widget.attrs['placeholder'] = 'Confirm Password'
+        self.fields['email'].widget.attrs['placeholder'] = 'example@gmail.com'
         for field in self.fields:
             self.fields[field].widget.attrs['class'] = 'form-control'
 

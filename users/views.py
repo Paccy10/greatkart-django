@@ -1,6 +1,7 @@
+import requests
 from django.shortcuts import render, redirect
 from django.contrib import messages, auth
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import get_template
@@ -8,10 +9,13 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.core.mail import EmailMessage
 
+from carts.views import _cart_id
+from carts.models import Cart, CartItem
 from .forms import RegistrationForm
 from .models import User
 
 
+@user_passes_test(lambda user: not user.is_authenticated, login_url='home')
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -56,6 +60,7 @@ def register(request):
     return render(request, 'users/register.html', context)
 
 
+@user_passes_test(lambda user: not user.is_authenticated, login_url='home')
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -63,9 +68,55 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
+            try:
+                cart = Cart.objects.get(cart_id=_cart_id(request))
+                is_cart_item_exists = CartItem.objects.filter(
+                    cart=cart).exists()
+                if is_cart_item_exists:
+                    cart_items = CartItem.objects.filter(cart=cart)
+                    product_variations = []
+                    product_quantities = []
+
+                    for cart_item in cart_items:
+                        variations = cart_item.variations.all()
+                        product_variations.append(list(variations))
+                        product_quantities.append(cart_item.quantity)
+
+                    cart_items = CartItem.objects.filter(user=user)
+                    ex_var_list = []
+                    items_ids = []
+
+                    for item in cart_items:
+                        ex_var_list.append(list(item.variations.all()))
+                        items_ids.append(item.id)
+
+                    for product_variation in product_variations:
+                        if product_variation in ex_var_list:
+                            index = ex_var_list.index(product_variation)
+                            item_id = items_ids[index]
+                            item = CartItem.objects.get(id=item_id)
+                            item.quantity += product_quantities[product_variations.index(
+                                product_variation)]
+                            item.user = user
+                            item.save()
+                        else:
+                            item = CartItem.objects.get(cart=cart)
+                            item.user = user
+                            item.save()
+            except:
+                pass
+
             auth.login(request, user)
             messages.success(request, 'You are now logged in')
-            return redirect('dashboard')
+            url = request.META.get('HTTP_REFERER')
+
+            try:
+                query = requests.utils.urlparse(url).query
+                params = dict(x.split('=') for x in query.split('&'))
+                if 'next' in params:
+                    return redirect(params['next'])
+            except:
+                return redirect('dashboard')
         else:
             messages.error(request, 'Invalid credentials')
             return redirect('login')
@@ -103,6 +154,7 @@ def dashboard(request):
     return render(request, 'users/dashboard.html')
 
 
+@user_passes_test(lambda user: not user.is_authenticated, login_url='home')
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -147,6 +199,7 @@ def reset_password_validate(request, uidb64, token):
         return redirect('forgot_password')
 
 
+@user_passes_test(lambda user: not user.is_authenticated, login_url='home')
 def reset_password(request):
     if request.method == 'POST':
         password = request.POST.get('password')
